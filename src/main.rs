@@ -1,7 +1,10 @@
-mod day1;
+#![allow(unused)]
 
-use day1::total_fuel2;
+mod day1;
+mod day2;
+
+use day2::intcode_2;
 
 fn main() {
-    println!("{}", total_fuel2());
+    println!("{:?}", intcode_2());
 }
