@@ -11,12 +11,13 @@ pub fn intcode() -> u32 {
 
     execute_intcode(&mut input);
 
-    return input[0];
+    input[0]
 }
+
 pub fn intcode_2() -> u32 {
     // part b: pair of values (a,b) such that output is 19690720
     // return 100 * a + b
-    let target = 19690720;
+    let target = 19_690_720;
     let mut input: Vec<u32> = include_str!("../input/day2.txt")
         .trim()
         .split(',')
