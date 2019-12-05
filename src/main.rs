@@ -2,9 +2,10 @@
 
 mod day1;
 mod day2;
+mod day3;
 
-use day2::intcode_2;
+use day3::get_shortest_dist;
 
 fn main() {
-    println!("{:?}", intcode_2());
+    println!("{:?}", get_shortest_dist());
 }
