@@ -3,9 +3,10 @@
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
-use day3::get_shortest_dist;
+use day4::num_valid_passwords2;
 
 fn main() {
-    println!("{:?}", get_shortest_dist());
+    println!("{:?}", num_valid_passwords2());
 }
