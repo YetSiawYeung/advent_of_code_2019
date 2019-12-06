@@ -5,9 +5,10 @@ mod day2;
 mod day3;
 mod day4;
 mod day5;
+mod day6;
 
-use day5::diag_air_conditioner_unit;
+use day6::find_santa;
 
 fn main() {
-    println!("{:?}", diag_air_conditioner_unit());
+    println!("{:?}", find_santa());
 }
