@@ -6,9 +6,12 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
-use day6::find_santa;
+use day7::max_signal_feedback;
 
-fn main() {
-    println!("{:?}", find_santa());
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("{:?}", max_signal_feedback()?);
+
+    Ok(())
 }
