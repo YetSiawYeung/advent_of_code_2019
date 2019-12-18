@@ -1,6 +1,7 @@
+use crate::utils::IntcodeMachine;
 use std::num::ParseIntError;
 
-pub fn max_signal() -> Result<i32, ParseIntError> {
+pub fn max_signal() -> Result<i64, ParseIntError> {
     // Part A
     let mut input = include_str!("../input/day7.txt")
         .split(',')
@@ -13,7 +14,7 @@ pub fn max_signal() -> Result<i32, ParseIntError> {
         .max()
         .unwrap())
 }
-pub fn max_signal_feedback() -> Result<i32, ParseIntError> {
+pub fn max_signal_feedback() -> Result<i64, ParseIntError> {
     // Part B
     let mut input = include_str!("../input/day7.txt")
         .split(',')
@@ -27,28 +28,25 @@ pub fn max_signal_feedback() -> Result<i32, ParseIntError> {
         .unwrap())
 }
 
-fn calculate_signal(machine: &mut [i32], input: &[i32]) -> i32 {
-    input
-        .iter()
-        .fold(0, |acc, i| execute_intcode(machine, &[*i, acc])[0])
+fn calculate_signal(machine: &mut [i64], input: &[i64]) -> i64 {
+    input.iter().fold(0, |acc, i| {
+        IntcodeMachine::create_and_execute(machine, Some(&[*i, acc])).unwrap()[0]
+    })
 }
 
-fn signal_feedback(machine: &[i32], input: &[i32]) -> i32 {
+fn signal_feedback(machine: &[i64], input: &[i64]) -> i64 {
     let mut machines = input
         .iter()
         .map(|i| {
-            let mut mac = Machine::new(machine);
+            let mut mac = IntcodeMachine::new(machine);
             mac.execute(Some(&[*i]));
             mac
         })
         .collect::<Vec<_>>();
     let mut acc = 0;
-    while machines
-        .iter()
-        .any(|machine| machine.state != MachineState::Stopped)
-    {
+    while machines.iter().any(|machine| !machine.stopped()) {
         for (mac, i) in machines.iter_mut().zip(input.iter()) {
-            acc = mac.execute(Some(&[acc]))[0];
+            acc = mac.execute(Some(&[acc])).unwrap()[0];
         }
     }
     acc
@@ -62,7 +60,7 @@ fn factorial(n: usize) -> usize {
     }
 }
 
-fn generate(k: usize, a: &mut Vec<i32>) -> Vec<Vec<i32>> {
+fn generate(k: usize, a: &mut Vec<i64>) -> Vec<Vec<i64>> {
     let mut ans = Vec::new();
 
     if k == 1 {
@@ -79,261 +77,8 @@ fn generate(k: usize, a: &mut Vec<i32>) -> Vec<Vec<i32>> {
     }
     ans
 }
-fn permutations(list: &mut Vec<i32>) -> Vec<Vec<i32>> {
+fn permutations(list: &mut Vec<i64>) -> Vec<Vec<i64>> {
     generate(list.len(), list)
-}
-fn execute_intcode(v: &mut [i32], input: &[i32]) -> Vec<i32> {
-    let mut machine = Machine::new(v);
-    machine.execute(Some(input))
-}
-fn get_mode(n: i32, nargs: i32) -> Vec<ParameterMode> {
-    let mut v = Vec::new();
-    let mut n = n;
-
-    for i in 0..nargs {
-        v.push(match n % 10 {
-            0 => ParameterMode::Position,
-            1 => ParameterMode::Immediate,
-            _ => unreachable!(),
-        });
-        n /= 10;
-    }
-    v
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum ParameterMode {
-    Position,
-    Immediate,
-}
-
-#[derive(Debug)]
-enum Operation {
-    Add(ParameterMode, ParameterMode, ParameterMode),
-    Multiply(ParameterMode, ParameterMode, ParameterMode),
-    Input(ParameterMode),
-    Output(ParameterMode),
-    JumpIfTrue(ParameterMode, ParameterMode),
-    JumpIfFalse(ParameterMode, ParameterMode),
-    LessThan(ParameterMode, ParameterMode, ParameterMode),
-    Equals(ParameterMode, ParameterMode, ParameterMode),
-    Terminate,
-}
-
-impl Operation {
-    fn from(n: i32) -> Self {
-        use Operation::*;
-
-        match n % 100 {
-            1 => {
-                let modes = get_mode(n / 100, 3);
-                Add(modes[0], modes[1], modes[2])
-            }
-            2 => {
-                let modes = get_mode(n / 100, 3);
-                Multiply(modes[0], modes[1], modes[2])
-            }
-            3 => {
-                let modes = get_mode(n / 100, 1);
-                Input(modes[0])
-            }
-            4 => {
-                let modes = get_mode(n / 100, 1);
-                Output(modes[0])
-            }
-            5 => {
-                let modes = get_mode(n / 100, 2);
-                JumpIfTrue(modes[0], modes[1])
-            }
-            6 => {
-                let modes = get_mode(n / 100, 2);
-                JumpIfFalse(modes[0], modes[1])
-            }
-            7 => {
-                let modes = get_mode(n / 100, 3);
-                LessThan(modes[0], modes[1], modes[2])
-            }
-            8 => {
-                let modes = get_mode(n / 100, 3);
-                Equals(modes[0], modes[1], modes[2])
-            }
-            99 => Terminate,
-            _ => unimplemented!(),
-        }
-    }
-    fn num_params(&self) -> usize {
-        use Operation::*;
-        match &self {
-            Terminate => 0,
-            Input(_) | Output(_) => 1,
-            JumpIfTrue(_, _) | JumpIfFalse(_, _) => 2,
-            Add(_, _, _) | Multiply(_, _, _) | LessThan(_, _, _) | Equals(_, _, _) => 3,
-        }
-    }
-}
-#[derive(Debug, PartialEq)]
-enum MachineState {
-    Running,
-    Blocked,
-    Stopped,
-}
-#[derive(Debug)]
-struct Machine {
-    ram: Vec<i32>,
-    pointer: usize,
-    state: MachineState,
-}
-impl Machine {
-    fn new(state: &[i32]) -> Self {
-        Self {
-            ram: state.to_vec(),
-            pointer: 0,
-            state: MachineState::Running,
-        }
-    }
-    fn execute(&mut self, input: Option<&[i32]>) -> Vec<i32> {
-        use Operation::*;
-
-        if self.state == MachineState::Stopped {
-            return input.map(Vec::from).unwrap_or_default();
-        }
-
-        let mut input = input.unwrap_or_default().iter();
-    
-        let mut output = Vec::new();
-        let mut increment_pointer = true;
-
-        loop {
-            let op = Operation::from(self.ram[self.pointer]);
-            match op {
-                Add(first, second, third) => {
-                    let param1 = self.resolve_get(first, 1);
-                    let param2 = self.resolve_get(second, 2);
-                    let param3 = match third {
-                        ParameterMode::Position => self.ram[self.pointer + 3] as usize,
-                        ParameterMode::Immediate => self.pointer + 3, // unreachable?
-                    };
-
-                    self.ram[param3] = param1 + param2;
-                }
-                Multiply(first, second, third) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 1] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 1],
-                    };
-                    let param2 = match second {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 2] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 2],
-                    };
-                    let param3 = match third {
-                        ParameterMode::Position => self.ram[self.pointer + 3] as usize,
-                        ParameterMode::Immediate => self.pointer + 3, // unreachable?
-                    };
-
-                    self.ram[param3] = param1 * param2;
-                }
-                Input(first) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.pointer + 1] as usize,
-                        ParameterMode::Immediate => self.pointer + 1,
-                    };
-                    if let Some(i) = input.next() {
-                        self.ram[param1] = *i;
-                    } else {
-                        self.state = MachineState::Blocked;
-                        return output;
-                    }
-                }
-                Output(first) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.pointer + 1] as usize,
-                        ParameterMode::Immediate => self.pointer + 1,
-                    };
-                    output.push(self.ram[param1]);
-                }
-                JumpIfTrue(first, second) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 1] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 1],
-                    };
-                    let param2 = match second {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 2] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 2],
-                    };
-                    if param1 != 0 {
-                        self.pointer = param2 as usize;
-                        increment_pointer = false;
-                    }
-                }
-                JumpIfFalse(first, second) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 1] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 1],
-                    };
-                    let param2 = match second {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 2] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 2],
-                    };
-                    if param1 == 0 {
-                        self.pointer = param2 as usize;
-                        increment_pointer = false;
-                    }
-                }
-                LessThan(first, second, third) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 1] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 1],
-                    };
-                    let param2 = match second {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 2] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 2],
-                    };
-                    let param3 = match third {
-                        ParameterMode::Position => self.ram[self.pointer + 3] as usize,
-                        ParameterMode::Immediate => self.pointer + 3, // unreachable?
-                    };
-
-                    self.ram[param3] = if param1 < param2 { 1 } else { 0 };
-                }
-                Equals(first, second, third) => {
-                    let param1 = match first {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 1] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 1],
-                    };
-                    let param2 = match second {
-                        ParameterMode::Position => self.ram[self.ram[self.pointer + 2] as usize],
-                        ParameterMode::Immediate => self.ram[self.pointer + 2],
-                    };
-                    let param3 = match third {
-                        ParameterMode::Position => self.ram[self.pointer + 3] as usize,
-                        ParameterMode::Immediate => self.pointer + 3, // unreachable?
-                    };
-
-                    self.ram[param3] = if param1 == param2 { 1 } else { 0 };
-                }
-                Terminate => {
-                    self.state = MachineState::Stopped;
-                    return output;
-                }
-            }
-            if increment_pointer {
-                self.increment_pointer(&op);
-            }
-            increment_pointer = true;
-        }
-    }
-
-    fn increment_pointer(&mut self, op: &Operation) {
-        self.pointer += op.num_params() + 1;
-    }
-    fn resolve_get(&self, mode: ParameterMode, count: usize) -> i32 {
-        use ParameterMode::*;
-
-        match mode {
-            Position => self.ram[self.ram[self.pointer + count] as usize],
-            Immediate => self.ram[self.pointer + count],
-        }
-    }
 }
 
 #[cfg(test)]

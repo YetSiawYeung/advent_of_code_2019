@@ -12,6 +12,7 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+mod utils;
 
 use day10::vaporize_200th_asteroid;
 
