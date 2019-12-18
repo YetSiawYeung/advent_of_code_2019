@@ -3,6 +3,7 @@
 extern crate bytecount;
 
 mod day1;
+mod day10;
 mod day2;
 mod day3;
 mod day4;
@@ -12,10 +13,10 @@ mod day7;
 mod day8;
 mod day9;
 
-use day9::sensor_boost;
+use day10::vaporize_200th_asteroid;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("{:?}", sensor_boost()?);
+    println!("{:?}", vaporize_200th_asteroid()?);
 
     Ok(())
 }
