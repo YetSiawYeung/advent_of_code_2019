@@ -1,3 +1,5 @@
+use std::num::ParseIntError;
+
 #[cfg(test)]
 const X_LEN: usize = 1000;
 #[cfg(not(test))]
@@ -8,41 +10,38 @@ const Y_LEN: usize = 1000;
 #[cfg(not(test))]
 const Y_LEN: usize = 35000;
 
-pub fn get_man_dist() -> u32 {
-    // part A
-    let input = include_str!("../input/day3.txt")
-        .lines()
-        .collect::<Vec<_>>();
+pub fn get_man_dist() -> Option<u32> {
+    // Part A
+    let mut input = include_str!("../input/day3.txt").lines();
 
-    let first = input[0];
-    let second = input[1];
+    let first = input.next()?;
+    let second = input.next()?;
 
-    get_closest_intersection(first, second)
+    Some(get_closest_intersection(first, second).ok()?)
 }
-pub fn get_shortest_dist() -> u32 {
+
+pub fn get_shortest_dist() -> Option<u32> {
     // Part B
-    let input = include_str!("../input/day3.txt")
-        .lines()
-        .collect::<Vec<_>>();
+    let mut input = include_str!("../input/day3.txt").lines();
 
-    let first = input[0];
-    let second = input[1];
+    let first = input.next()?;
+    let second = input.next()?;
 
-    get_shortest_intersection(first, second)
+    Some(get_shortest_intersection(first, second).ok()?)
 }
 
-fn get_closest_intersection(first: &str, second: &str) -> u32 {
+fn get_closest_intersection(first: &str, second: &str) -> Result<u32, ParseMovementErr> {
     use Movement::*;
     use VisitedBy::*;
 
     let first: Vec<Movement> = first
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect();
+        .map(|x| x.trim().parse())
+        .collect::<Result<_, _>>()?;
     let second: Vec<Movement> = second
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect();
+        .map(|x| x.trim().parse())
+        .collect::<Result<_, _>>()?;
 
     let mut grid = vec![[Neither; X_LEN]; Y_LEN];
     let central_port = ((X_LEN / 2) as u32, (Y_LEN / 2) as u32);
@@ -125,21 +124,21 @@ fn get_closest_intersection(first: &str, second: &str) -> u32 {
         }
     }
 
-    shortest_dist
+    Ok(shortest_dist)
 }
 
-fn get_shortest_intersection(first: &str, second: &str) -> u32 {
+fn get_shortest_intersection(first: &str, second: &str) -> Result<u32, ParseMovementErr> {
     use Movement::*;
     use VisitDistance::*;
 
-    let first: Vec<Movement> = first
+    let first = first
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect();
-    let second: Vec<Movement> = second
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
+    let second = second
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect();
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut grid = vec![[Neither; X_LEN]; Y_LEN];
     let central_port = ((X_LEN / 2) as u32, (Y_LEN / 2) as u32);
@@ -248,7 +247,7 @@ fn get_shortest_intersection(first: &str, second: &str) -> u32 {
         }
     }
 
-    shortest_dist
+    Ok(shortest_dist)
 }
 
 fn manhattan_distance(first: (u32, u32), second: (u32, u32)) -> u32 {
@@ -271,7 +270,7 @@ enum Movement {
     Right(u32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct ParseMovementErr {}
 
 impl std::str::FromStr for Movement {
@@ -338,14 +337,14 @@ mod test {
                 "R75,D30,R83,U83,L12,D49,R71,U7,L72",
                 "U62,R66,U55,R34,D71,R55,D58,R83"
             ),
-            159
+            Ok(159)
         );
         assert_eq!(
             get_closest_intersection(
                 "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
                 "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"
             ),
-            135
+            Ok(135)
         );
     }
 
@@ -356,14 +355,14 @@ mod test {
                 "R75,D30,R83,U83,L12,D49,R71,U7,L72",
                 "U62,R66,U55,R34,D71,R55,D58,R83"
             ),
-            610
+            Ok(610)
         );
         assert_eq!(
             get_shortest_intersection(
                 "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
                 "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"
             ),
-            410
+            Ok(410)
         );
     }
 }

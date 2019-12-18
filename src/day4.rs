@@ -1,25 +1,27 @@
-pub fn num_valid_passwords() -> usize {
+use std::num::ParseIntError;
+
+pub fn num_valid_passwords() -> Result<usize, ParseIntError> {
     // Part A
     let input = include_str!("../input/day4.txt")
         .split('-')
-        .map(|x| x.trim().parse().unwrap())
-        .collect::<Vec<_>>();
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
 
     let range = input[0]..input[1];
 
-    range.filter(|&i| is_valid(i)).count()
+    Ok(range.filter(|&i| is_valid(i)).count())
 }
 
-pub fn num_valid_passwords2() -> usize {
+pub fn num_valid_passwords2() -> Result<usize, ParseIntError> {
     // Part B
     let input = include_str!("../input/day4.txt")
         .split('-')
-        .map(|x| x.trim().parse().unwrap())
-        .collect::<Vec<_>>();
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
 
     let range = input[0]..input[1];
 
-    range.filter(|&i| is_valid2(i)).count()
+    Ok(range.filter(|&i| is_valid2(i)).count())
 }
 
 fn is_valid(password: u32) -> bool {

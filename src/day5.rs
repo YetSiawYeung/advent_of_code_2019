@@ -1,19 +1,23 @@
-pub fn diag_air_conditioner_unit() -> Vec<i32> {
+use std::num::ParseIntError;
+
+pub fn diag_air_conditioner_unit() -> Result<Vec<i32>, ParseIntError> {
     // Part A
     let mut input = include_str!("../input/day5.txt")
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect::<Vec<_>>();
-    execute_intcode(&mut input, &[1])
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(execute_intcode(&mut input, &[1]))
 }
 
-pub fn diag_thermal_radiator_controller() -> Vec<i32> {
+pub fn diag_thermal_radiator_controller() -> Result<Vec<i32>, ParseIntError> {
     // Part B
     let mut input = include_str!("../input/day5.txt")
         .split(',')
-        .map(|x| x.trim().parse().unwrap())
-        .collect::<Vec<_>>();
-    execute_intcode(&mut input, &[5])
+        .map(|x| x.trim().parse())
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(execute_intcode(&mut input, &[5]))
 }
 
 fn execute_intcode(v: &mut [i32], input: &[i32]) -> Vec<i32> {

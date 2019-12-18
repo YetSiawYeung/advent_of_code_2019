@@ -1,13 +1,17 @@
-pub fn total_fuel() -> u32 {
-    // part 1
+use std::num::ParseIntError;
+
+pub fn total_fuel() -> Result<u32, ParseIntError> {
+    // Part A
     let input = include_str!("../input/day1.txt");
-    input.lines().map(|i| fuel(i.parse().unwrap())).sum()
+
+    input.lines().map(|i| i.parse().map(fuel)).sum()
 }
 
-pub fn total_fuel2() -> u32 {
-    // part 2
+pub fn total_fuel2() -> Result<u32, ParseIntError> {
+    // Part B
     let input = include_str!("../input/day1.txt");
-    input.lines().map(|i| fuel2(i.parse().unwrap())).sum()
+
+    input.lines().map(|i| i.parse().map(fuel2)).sum()
 }
 
 fn fuel(n: u32) -> u32 {

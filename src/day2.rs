@@ -1,28 +1,30 @@
-pub fn intcode() -> u32 {
-    // part a: return element at index 0 after executing intcode
-    let mut input: Vec<u32> = include_str!("../input/day2.txt")
+use std::num::ParseIntError;
+
+pub fn intcode() -> Result<u32, ParseIntError> {
+    // Part A: return element at index 0 after executing intcode
+    let mut input = include_str!("../input/day2.txt")
         .trim()
         .split(',')
-        .map(|x| x.parse().unwrap())
-        .collect();
+        .map(|x| x.parse())
+        .collect::<Result<Vec<_>, ParseIntError>>()?;
 
     input[1] = 12;
     input[2] = 2;
 
     execute_intcode(&mut input);
 
-    input[0]
+    Ok(input[0])
 }
 
-pub fn intcode_2() -> u32 {
-    // part b: pair of values (a,b) such that output is 19690720
+pub fn intcode_2() -> Result<Option<u32>, ParseIntError> {
+    // Part B: find pair of values (a,b) such that output is 19690720
     // return 100 * a + b
     let target = 19_690_720;
-    let mut input: Vec<u32> = include_str!("../input/day2.txt")
+    let mut input = include_str!("../input/day2.txt")
         .trim()
         .split(',')
-        .map(|x| x.parse().unwrap())
-        .collect();
+        .map(|x| x.parse())
+        .collect::<Result<Vec<_>, _>>()?;
 
     for a in 0..100 {
         for b in 0..100 {
@@ -31,13 +33,12 @@ pub fn intcode_2() -> u32 {
             let mut temp = input.clone();
             execute_intcode(&mut temp);
             if temp[0] == target {
-                println!("{} {}", a, b);
-                return 100 * a + b;
+                return Ok(Some(100 * a + b));
             };
         }
     }
 
-    panic!("Could not find values to produce target output")
+    Ok(None)
 }
 
 fn execute_intcode(v: &mut [u32]) {
