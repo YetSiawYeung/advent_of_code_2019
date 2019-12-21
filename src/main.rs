@@ -4,6 +4,7 @@ extern crate bytecount;
 
 mod day1;
 mod day10;
+mod day11;
 mod day2;
 mod day3;
 mod day4;
@@ -14,10 +15,10 @@ mod day8;
 mod day9;
 mod utils;
 
-use day10::vaporize_200th_asteroid;
+use day11::reggo;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("{:?}", vaporize_200th_asteroid()?);
+    println!("{}", reggo()?);
 
     Ok(())
 }
