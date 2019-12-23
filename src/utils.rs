@@ -139,10 +139,16 @@ impl IntcodeMachine {
     pub fn stopped(&self) -> bool {
         self.state == MachineState::Stopped
     }
+    pub fn set_memory(&mut self, address: usize, value: i64) {
+        self.ram[address] = value;
+    }
+    pub fn state(&self) -> MachineState {
+        self.state
+    }
 }
 
-#[derive(Debug, PartialEq)]
-enum MachineState {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MachineState {
     Running,
     Blocked,
     Stopped,
